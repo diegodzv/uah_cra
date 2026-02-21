@@ -1,0 +1,63 @@
+INFORMACIÓN SOBRE EL MONOPOLY:
+- Los jugadores comienzan con 300 dólares.
+- Cada turno de un jugador (si no está en la Cárcel) tira dos dados. Avanza tantas casillas como la suma de resultados de cada dado (entre 2 y 12).
+- Toda partida tiene, al menos, 3 jugadores. Uno de ellos es el BANCO. El banco es un jugador pasivo. Comienza el juego con todas las propiedades en su posesión. Cuando un jugador desea comprar una propiedad, es el banco quien se la vende. Cuando un jugador acaba en bancarrota, es el banco quien le compra las propiedades. El banco tiene dinero ilimitado. Además, el banco tiene una caja "especial" que es la que almacena los siguientes importes: dinero de impuestos, dinero que pierde un jugador en el casino, dinero que tiene que pagar un jugador cuando saca un número impar en una casilla de "suerte".
+- Salida. Todos los jugadores comienzan desde la casilla de salida. Cada vez que un jugador cae en la casilla de salida, cobra 200 del banco.
+- Propiedades de colores ("ColorX"). Cuando un jugador cae en una propiedad que pertenece a otro jugador, le paga un alquiler igual al 20% del precio original de la propiedad. Cuando un jugador cae en una propiedad que no es de nadie (es del banco) puede elegir comprarla (si tiene fondos suficientes).
+- Suerte. Hay casillas de "Suerte". Cuando un jugador cae, tira un dado. Si cae par, gana 100, si cae impar, paga 100 al banco. Obligatorio jugar. Si saca impar, el dinero se almacena en la caja especial del banco.
+- Impuesto. Cuando un jugador cae en una casilla de impuesto, paga 150 al banco. Este dinero se almacena en la caja especial del banco.
+- Estación. Hay 4 estaciones. Todas cuestan 200 y tienen un alquiler de 50.
+- Visita cárcel. No hace nada. Cuando un jugador cae aquí su turno finaliza sin más.
+- Casino. Hay una casilla de "Casino". Cuando un jugador cae en el casino, puede elegir si jugar o no, además de la cantidad que desea jugar (100, 200, 500 o 1000). Si desea jugar, tira un dado. Si saca un 1 o un 6, gana el triple de lo apostado. Si saca un 2, 3, 4 o 5, pierde lo apostado. Cuando un jugador pierde dinero en el casino, el dinero perdido se guarda en la caja especial del banco.
+- Párking. Cuando un jugador cae en la casilla Parking, se lleva el 50% del dinero que haya en la caja especial del banco.
+- Cárcel. Cuando un jugador cae en la casilla cárcel, se le lleva automáticamente a la casilla "Visita cárcel". Durante su siguiente turno, puede elegir si pagar 200 o tirar dos dados. Si elige pagar, sale de la cárcel y su turno acaba. Si elige tirar los dos dados y saca dobles (el mismo número en ambos dados), sale de la cárcel y su turno acaba. Si no saca dobles, sigue en la cárcel y en su turno siguiente puede volver a elegir pagar o tirar los dados. Un jugador puede estar un máximo de 3 turnos en la cárcel (empieza a contar el turno siguiente de caer: cae->turno1->turno2->turno3->sale:turno normal).
+- Sobre las casas. Cuando un jugador tiene en su posesión todas las propiedades de un mismo color, al inicio de su turno tiene la opción de comprar casas para sus propiedades. Durante un turno puede comprar tantas casas como quiera. El precio de una casa es de 100, y aumenta el alquiler de la propiedad en 25. 
+Para implementar esto se me ocurre que, al final del turno, se pregunte (por consola) al jugador si quiere comprar una casa. Si decide comprarla, se le debe mostrar una lista con sus propiedades para que elija. Una propiedad puede tener un máximo de 3 casas.
+- Partida: quiero que haya una entidad llamada "Partida", que almacene el estado de la partida. Debe almacenar:
+- - La lista de propiedades que posee el banco.
+- - El dinero en la caja especial del banco.
+- - Los jugadores actualmente en la cárcel.
+- - El dinero de cada jugador.
+- - La lista de propiedades de cada jugador, indicando cuáles de ella tienen casas.
+La aplicación debe estar pensada para que se juege por terminal, mostrando por pantalla información de todos los eventos que ocurren en el juego. Durante su turno, cada jugador puede consultar la información de la partida.
+CASILLAS:
+1- Salida.
+2- Morado1, precio=60.
+3- Suerte1.
+4- Morado2, precio=60.
+5- Impuesto1.
+6- Estación1.
+7- Gris1, precio=100.
+8- Suerte2.
+9- Gris2, precio=100.
+10- Gris3, precio=120.
+11- Visita Cárcel.
+12- Rosa1, precio=140.
+13- Impuesto2.
+14- Rosa2, precio=140.
+15- Rosa3, precio=160.
+16- Estación2.
+17- Naranja1, precio=180.
+18- Suerte3.
+19- Naranja2, precio=180.
+20- Naranja3, precio=200.
+21- Párking.
+22- Rojo1, precio=220.
+23- Suerte4.
+24- Rojo2, precio=220.
+25- Rojo3, precio=240.
+26- Estación3.
+27- Amarillo1, precio=260.
+28- Amarillo2, precio=260.
+29- Impuesto3.
+30- Amarillo3, precio=280.
+31- Cárcel.
+32- Verde1, precio=300.
+33- Verde2, precio=300.
+34- Casino.
+35- Verde3, precio=320.
+36- Estación4.
+37- Suerte.
+38- Azul1, precio=350.
+39- Impuesto4.
+40- Azul2, precio=400.
