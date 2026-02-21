@@ -3,9 +3,7 @@
 % Contadores y reporte
 % =========================
 
-% Estructura:
 % metricas(Turnos, TiradasDados, Compras, Alquileres, Impuestos, Suertes, CasinosJugados, TrampasIntentadas, Bancarrotas, IterReglas)
-
 metricas_inicial(metricas(0,0,0,0,0,0,0,0,0,0)).
 
 inc_turnos(metricas(T,D,C,A,I,S,Ca,Tr,B,It), metricas(T2,D,C,A,I,S,Ca,Tr,B,It)) :- T2 is T+1.
@@ -22,7 +20,7 @@ add_iter(metricas(T,D,C,A,I,S,Ca,Tr,B,It), K, metricas(T,D,C,A,I,S,Ca,Tr,B,It2))
 mostrar_metricas(metricas(T,D,C,A,I,S,Ca,Tr,B,It)) :-
     nl, write('--- METRICAS ---'), nl,
     write('Turnos jugados: '), write(T), nl,
-    write('Tiradas de dados (eventos): '), write(D), nl,
+    write('Eventos dados (tiradas): '), write(D), nl,
     write('Compras: '), write(C), nl,
     write('Alquileres: '), write(A), nl,
     write('Impuestos: '), write(I), nl,
@@ -30,4 +28,4 @@ mostrar_metricas(metricas(T,D,C,A,I,S,Ca,Tr,B,It)) :-
     write('Casinos jugados: '), write(Ca), nl,
     write('Trampas intentadas: '), write(Tr), nl,
     write('Bancarrotas: '), write(B), nl,
-    write('Iteraciones de reglas (acumuladas): '), write(It), nl.
+    write('Iteraciones reglas (acum): '), write(It), nl.
