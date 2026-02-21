@@ -9,16 +9,8 @@
 start :-
     nl,
     write('=== MONOPOLY (Prolog) - Juego por terminal ==='), nl,
-    write('Numero de jugadores (sin contar BANCO) (>=2): '), nl,
-    read(N),
-    ( integer(N), N >= 2 -> true
-    ; write('Entrada invalida. Debe ser entero >= 2.'), nl, fail
-    ),
-    write('Maximo de turnos (>=1). Si no quieres limite, pon grande (p.ej. 1000): '), nl,
-    read(MaxT),
-    ( integer(MaxT), MaxT >= 1 -> true
-    ; write('Entrada invalida. Debe ser entero >= 1.'), nl, fail
-    ),
+    read_int_min('Numero de jugadores (sin contar BANCO) (>=2): ', 2, N),
+    read_int_min('Maximo de turnos (>=1). Si no quieres limite, pon grande (p.ej. 1000): ', 1, MaxT),
     crear_partida_interactiva(N, MaxT, Partida0),
     nl, write('Partida creada. Comienza el juego.'), nl,
     jugar(Partida0, _PartidaFinal).

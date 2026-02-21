@@ -20,6 +20,64 @@ suerte_delta(75).
 estacion_precio(200).
 estacion_alquiler(50).
 
+% ---------- Entrada robusta (sin punto, sin variables) ----------
+% Lee una linea y devuelve un atom en minusculas o respetando mayus si viene entre comillas.
+read_line_trimmed(StringOut) :-
+    read_line_to_string(user_input, S0),
+    normalize_space(string(S1), S0),
+    StringOut = S1.
+
+read_atom_prompt(Prompt, Atom) :-
+    repeat,
+      nl, write(Prompt), nl,
+      read_line_trimmed(S),
+      ( S == "" ->
+          write('Entrada vacia. Intenta de nuevo.'), nl, fail
+      ; string_lower(S, SLow),
+        atom_string(Atom, SLow),
+        !
+      ).
+
+read_int_min(Prompt, Min, Int) :-
+    repeat,
+      nl, write(Prompt), nl,
+      read_line_trimmed(S),
+      ( catch(number_string(N, S), _, fail),
+        integer(N),
+        N >= Min
+      -> Int = N, !
+      ;  write('Valor invalido. Debe ser entero >= '), write(Min), nl,
+         fail
+      ).
+
+read_yes_no(Prompt, Answer) :-
+    repeat,
+      nl, write(Prompt), nl,
+      read_line_trimmed(S),
+      string_lower(S, L),
+      ( L = "si" ; L = "s" ),
+      Answer = si, !
+    ;
+      ( L = "no" ; L = "n" ),
+      Answer = no, !
+    ;
+      write('Responde si/no.'), nl, fail.
+
+read_choice_int(Prompt, Allowed, Choice) :-
+    repeat,
+      nl, write(Prompt), nl,
+      read_line_trimmed(S),
+      ( catch(number_string(N, S), _, fail),
+        integer(N),
+        member_int(N, Allowed)
+      -> Choice = N, !
+      ;  write('Opcion invalida. Opciones: '), write(Allowed), nl,
+         fail
+      ).
+
+member_int(X, [X|_]) :- !.
+member_int(X, [_|R]) :- member_int(X, R).
+
 % ---------- Pseudo-azar cíclico ----------
 dados_por_defecto([1,2,3,4,5,6,6,5,4,3,2,1,2,4,6,1,3,5,5,3,1,6,4,2]).
 azar_por_defecto([5,91,12,77,33,64,18,49,81,2,56,27,73,40,99,7,61,14,88,21,45,67,30,10,95,52,38,79,25,60,1,86,44,71,16,58,90,34,63,9]).
@@ -99,8 +157,9 @@ crear_partida_interactiva(N, MaxT, Partida) :-
 
 crear_jugadores_interactivos(I, N, []) :- I > N, !.
 crear_jugadores_interactivos(I, N, [J|R]) :-
-    write('Nombre del jugador '), write(I), write(' (termina con punto, ej: ana.): '), nl,
-    read(Nombre),
+    atom_concat('Nombre del jugador ', I, P1),
+    atom_concat(P1, ' (puedes escribir Diego/sara sin punto): ', Prompt),
+    read_atom_prompt(Prompt, Nombre),
     dinero_inicial(D0),
     J = jugador(Nombre, 1, D0, [], 0),
     I2 is I+1,
@@ -123,19 +182,25 @@ imprimir_jugadores([jugador(N,Pos,D,Props,Carc)|R]) :-
     write(' | Dinero: '), write(D),
     write(' | CarcelRestante: '), write(Carc), nl,
     write('  Propiedades:'), nl,
-    imprimir_props(Props), nl,
+    imprimir_props(Props),
+    nl,
     imprimir_jugadores(R).
 
-imprimir_props([]) :- write('   (ninguna)'), nl.
-imprimir_props([prop(N,P,C,H)|R]) :-
+% FIX: si la lista no es vacia, no imprimir "(ninguna)" al final
+imprimir_props([]) :-
+    write('   (ninguna)'), nl.
+imprimir_props([H|T]) :-
+    imprimir_props_list([H|T]).
+imprimir_props_list([]).
+imprimir_props_list([prop(N,P,C,H)|R]) :-
     write('   - '), write(N),
     write(' (precio='), write(P),
     write(', color='), write(C),
     write(', casas='), write(H), write(')'), nl,
-    imprimir_props(R).
+    imprimir_props_list(R).
 
 % ---------- Fin de partida ----------
-partida_terminada(partida(_,_,Jugadores,_,TurnoNum,MaxT,_,_,_), motivo(max_turnos)) :-
+partida_terminada(partida(_,_,_Jugadores,_,TurnoNum,MaxT,_,_,_), motivo(max_turnos)) :-
     TurnoNum >= MaxT, !.
 partida_terminada(partida(_,_,Jugadores,_,_,_,_,_,_), motivo(un_solo_jugador)) :-
     length_list(Jugadores, L), L =:= 1, !.
@@ -153,42 +218,44 @@ turno_interactivo(Partida0, PartidaFinal) :-
     write('TURNO '), write(TurnoNum1), write(' -> Jugador: '), write(Nombre), nl,
     write('============================='), nl,
 
-    preguntar_si_no('¿Quieres consultar la informacion completa de la partida? (si/no).', Ver),
+    read_yes_no('Quieres consultar la informacion completa de la partida? (si/no)', Ver),
     (Ver == si -> mostrar_estado(Partida0) ; true),
 
     % Casas por monopolio
     ofrecer_compra_casas(Jug0, Jugadores0, JugA),
 
     % Trampas
-    aplicar_trampas_interactivo(JugA, Resto0, Azar0, Azar1, JugB, Resto1, M1, M2),
+    aplicar_trampas_interactivo(JugA, Resto0, Azar0, Azar1, JugB0, Resto1, M1, M2),
+
+    % Resolver bancarrota inmediatamente tras trampas (con banco real)
+    resolver_bancarrota_jugador_y_banco(JugB0, Resto1, BP0, BP_after_trampas, JugB, Resto2, M2, M3),
 
     ( JugB == eliminado ->
-        % Eliminar y avanzar
-        Jugadores1 = Resto1,
-        Partida1 = partida(BP0, Caja0, Jugadores1, Idx0, TurnoNum1, MaxT, Dados0, Azar1, M2),
+        Jugadores1 = Resto2,
+        Partida1 = partida(BP_after_trampas, Caja0, Jugadores1, Idx0, TurnoNum1, MaxT, Dados0, Azar1, M3),
         normalizar_y_avanzar(Partida1, PartidaFinal)
-    ;   % Cárcel
-        gestionar_carcel(JugB, Dados0, Dados1, EstadoCarcel, M2, M3),
+    ;   % Carcel
+        gestionar_carcel(JugB, Dados0, Dados1, EstadoCarcel, M3, M4),
         ( EstadoCarcel = fin_turno_con(JugCarcActual) ->
-            reconstruir_jugadores(JugCarcActual, Resto1, Jugadores1),
-            Partida1 = partida(BP0, Caja0, Jugadores1, Idx0, TurnoNum1, MaxT, Dados1, Azar1, M3),
+            reconstruir_jugadores(JugCarcActual, Resto2, Jugadores1),
+            Partida1 = partida(BP_after_trampas, Caja0, Jugadores1, Idx0, TurnoNum1, MaxT, Dados1, Azar1, M4),
             avanzar_turno(Partida1, PartidaFinal)
         ;   % Movimiento
-            mover_jugador(JugB, Dados1, Dados2, JugMov, Caja0, Caja1, M3, M4),
+            mover_jugador(JugB, Dados1, Dados2, JugMov, Caja0, Caja1, M4, M5),
             JugMov = jugador(_, PosNueva, _, _, _),
             tablero(T),
             nth1_list(PosNueva, T, Casilla),
             nl, write('Has caido en: '), write(Casilla), nl,
 
-            aplicar_reglas_casilla(Casilla, JugMov, Resto1, BP0, BP1, Caja1, Caja2, Dados2, Dados3, JugFin, RestoFin, M4, M5, Iter),
-            add_iter(M5, Iter, M6),
+            aplicar_reglas_casilla(Casilla, JugMov, Resto2, BP_after_trampas, BP1, Caja1, Caja2, Dados2, Dados3, JugFin, RestoFin, M5, M6, Iter),
+            add_iter(M6, Iter, M7),
 
             ( JugFin == eliminado ->
                 Jugadores1 = RestoFin,
-                Partida1 = partida(BP1, Caja2, Jugadores1, Idx0, TurnoNum1, MaxT, Dados3, Azar1, M6),
+                Partida1 = partida(BP1, Caja2, Jugadores1, Idx0, TurnoNum1, MaxT, Dados3, Azar1, M7),
                 normalizar_y_avanzar(Partida1, PartidaFinal)
             ;   reconstruir_jugadores(JugFin, RestoFin, Jugadores1),
-                Partida1 = partida(BP1, Caja2, Jugadores1, Idx0, TurnoNum1, MaxT, Dados3, Azar1, M6),
+                Partida1 = partida(BP1, Caja2, Jugadores1, Idx0, TurnoNum1, MaxT, Dados3, Azar1, M7),
                 avanzar_turno(Partida1, PartidaFinal)
             )
         )
@@ -209,13 +276,6 @@ avanzar_turno(partida(BP,Caja,Jugadores,Idx,Tn,MaxT,D,A,M),
     (L =:= 0 -> Idx2 = 0
     ; Idx2 is (Idx + 1) mod L
     ).
-
-% ---------- Preguntas ----------
-preguntar_si_no(Prompt, Respuesta) :-
-    nl, write(Prompt), nl,
-    read(R),
-    (R == si ; R == no),
-    Respuesta = R.
 
 % ---------- Dados ----------
 tirar_dos_dados(Dados0, Dados2, D1, D2, M0, M2) :-
@@ -241,7 +301,7 @@ mover_jugador(jugador(N,Pos,Din,Props,Carc), Dados0, Dados2,
         cobro_salida(C),
         DinNueva is Din + C,
         Caja1 = Caja0,
-        nl, write('Has pasado por SALIDA: +'), write(C), nl
+        nl, write('Pasas por SALIDA: +'), write(C), nl
     ;   DinNueva = Din,
         Caja1 = Caja0
     ),
@@ -252,17 +312,15 @@ mover_jugador(jugador(N,Pos,Din,Props,Carc), Dados0, Dados2,
 
 paso_por_salida(Pos, Steps) :- S is Pos + Steps, S > 40.
 
-% ---------- Cárcel ----------
-% Si CarcelRestante>0, el jugador NO se mueve y su turno termina.
+% ---------- Carcel ----------
 gestionar_carcel(jugador(N,Pos,Din,Props,Carc), Dados0, DadosFinal, EstadoOut, M0, MFinal) :-
     (Carc =:= 0 ->
         DadosFinal = Dados0,
         EstadoOut = continuar,
         MFinal = M0
-    ;   nl, write('Estas en la CARCEL. Intentos restantes: '), write(Carc), nl,
-        nl, write('Opciones: pagar 200 (p) o tirar dados (t).'), nl,
-        read(Opc),
-        (Opc == p, Din >= 200 ->
+    ;   nl, write('Estas en CARCEL. Intentos restantes: '), write(Carc), nl,
+        read_choice_int('Opciones: pagar 200 (1) o tirar dados (2)', [1,2], Opc),
+        (Opc =:= 1, Din >= 200 ->
             Din2 is Din - 200,
             nl, write('Pagas 200 y SALES. Tu turno termina.'), nl,
             EstadoOut = fin_turno_con(jugador(N,Pos,Din2,Props,0)),
@@ -271,7 +329,7 @@ gestionar_carcel(jugador(N,Pos,Din,Props,Carc), Dados0, DadosFinal, EstadoOut, M
         ;   tirar_dos_dados(Dados0, Dados2, D1, D2, M0, M1),
             nl, write('Dados en carcel: '), write(D1), write(' y '), write(D2), nl,
             (D1 =:= D2 ->
-                nl, write('Dobles => SALES. Tu turno termina.'), nl,
+                nl, write('Dobles => SALES. Turno termina.'), nl,
                 EstadoOut = fin_turno_con(jugador(N,Pos,Din,Props,0))
             ;   Carc2 is Carc - 1,
                 (Carc2 =< 0 ->
@@ -288,7 +346,7 @@ gestionar_carcel(jugador(N,Pos,Din,Props,Carc), Dados0, DadosFinal, EstadoOut, M
 
 % ---------- Trampas ----------
 aplicar_trampas_interactivo(Jug0, Resto0, Azar0, Azar1, JugFinal, RestoFinal, M0, M2) :-
-    preguntar_si_no('¿Quieres intentar hacer trampas? (si/no).', R),
+    read_yes_no('Quieres intentar hacer trampas? (si/no)', R),
     (R == no ->
         JugFinal = Jug0, RestoFinal = Resto0, Azar1 = Azar0, M2 = M0
     ;   inc_trampas(M0, M1),
@@ -308,11 +366,7 @@ aplicar_trampas_interactivo(Jug0, Resto0, Azar0, Azar1, JugFinal, RestoFinal, M0
             JugFinal = JugTmp,
             RestoFinal = RestoTmp,
             M2 = M1
-        ),
-        % bancarrota inmediata por trampas
-        resolver_bancarrota_si_aplica(JugFinal, RestoFinal, JugFinal2, RestoFinal2, _BPdummy),
-        JugFinal = JugFinal2,
-        RestoFinal = RestoFinal2
+        )
     ).
 
 tirar_azar(Azar0, Azar1, V) :-
@@ -327,7 +381,7 @@ sumar_200_a_todos([jugador(N,Pos,Din,Props,Carc)|R], [jugador(N,Pos,Din2,Props,C
 sumar_dinero(jugador(N,Pos,Din,Props,Carc), X, jugador(N,Pos,Din2,Props,Carc)) :- Din2 is Din + X.
 restar_dinero(jugador(N,Pos,Din,Props,Carc), X, jugador(N,Pos,Din2,Props,Carc)) :- Din2 is Din - X.
 
-% ---------- Casas por monopolio ----------
+% ---------- Casas/Monopolios ----------
 ofrecer_compra_casas(Jug0, Jugadores, JugFinal) :-
     Jug0 = jugador(_,_,_,Props,_),
     (Props == [] ->
@@ -341,7 +395,7 @@ ofrecer_compra_casas(Jug0, Jugadores, JugFinal) :-
     ).
 
 ciclo_comprar_casas(Jug0, ColoresMonopolio, JugFinal) :-
-    preguntar_si_no('¿Quieres comprar casas ahora? (si/no).', R),
+    read_yes_no('Quieres comprar casas ahora? (si/no)', R),
     (R == no ->
         JugFinal = Jug0
     ; Jug0 = jugador(N,Pos,Din,Props,Carc),
@@ -351,9 +405,8 @@ ciclo_comprar_casas(Jug0, ColoresMonopolio, JugFinal) :-
           JugFinal = Jug0
       ; nl, write('Propiedades elegibles:'), nl,
         imprimir_props_con_indices(Elegibles, 1),
-        nl, write('Elige indice para comprar 1 casa (o 0 para terminar).'), nl,
-        read(I),
-        (I == 0 ->
+        read_int_min('Elige indice para comprar 1 casa (o 0 para terminar): ', 0, I),
+        (I =:= 0 ->
             JugFinal = Jug0
         ; I0 is I - 1,
           seleccionar_por_indice(Elegibles, I0, PropSel, _),
@@ -399,7 +452,6 @@ propiedades_elegibles_para_casas([prop(N,P,C,H)|R], Colores, [prop(N,P,C,H)|R2])
 propiedades_elegibles_para_casas([_|R], Colores, R2) :-
     propiedades_elegibles_para_casas(R, Colores, R2).
 
-% ---------- Monopolios ----------
 colores_del_tablero([morado,gris,rosa,naranja,rojo,amarillo,verde,azul]).
 
 monopolios_de_jugador(_Jugadores, jugador(_,_,_,Props,_), ColoresMonopolio) :-
@@ -477,9 +529,8 @@ aplicar_una_vez(Casilla, Jug0, Resto0, BP0, BP1, Caja0, Caja1, Dados0, Dados1, J
         gestionar_propiedad(Nom,Precio,Color, Jug0, Resto0, BP0, BP1, Jug1, Resto1, M0, M1, Cambio0),
         Caja1=Caja0, Dados1=Dados0
     ),
-    % bancarrota al final
     resolver_bancarrota_jugador_y_banco(Jug1, Resto1, BP1, BPX, JugX, RestoX, M1, M2),
-    JugOut = JugX, RestoOut = RestoX, BP1 = BPX, MOut = M2,
+    JugOut=JugX, RestoOut=RestoX, BP1=BPX, MOut=M2,
     (Cambio0 == si ; JugX == eliminado -> Cambio = si ; Cambio = no).
 
 % ---------- Impuesto / Suerte / Parking / Casino ----------
@@ -512,11 +563,11 @@ cobrar_parking(jugador(N,Pos,Din,Props,Carc), Caja0, jugador(N,Pos,Din2,Props,Ca
 
 jugar_casino_interactivo(Jug0, Caja0, Caja1, Dados0, Dados1, Jug1, M0, M2) :-
     nl, write('CASINO.'), nl,
-    preguntar_si_no('¿Quieres jugar? (si/no).', R),
+    read_yes_no('Quieres jugar? (si/no)', R),
     (R == no ->
         Jug1 = Jug0, Caja1 = Caja0, Dados1 = Dados0, M2 = M0,
         write('No juegas.'), nl
-    ; elegir_apuesta(Apuesta),
+    ; read_choice_int('Apuesta (100/200/500/1000): ', [100,200,500,1000], Apuesta),
       Jug0 = jugador(N,Pos,Din,Props,Carc),
       (Din < Apuesta ->
           write('No tienes dinero para esa apuesta. No juegas.'), nl,
@@ -538,19 +589,13 @@ jugar_casino_interactivo(Jug0, Caja0, Caja1, Dados0, Dados1, Jug1, M0, M2) :-
       )
     ).
 
-elegir_apuesta(A) :-
-    nl, write('Apuesta (100/200/500/1000). Ej: 200.'), nl,
-    read(X),
-    (X==100;X==200;X==500;X==1000),
-    A = X.
-
-% ---------- Propiedad / Estación: compra o alquiler ----------
+% ---------- Propiedad / Estacion ----------
 gestionar_propiedad(Nom,Precio,Color, Jug0, Resto0, BP0, BP1, Jug1, Resto1, M0, M1, Cambio) :-
     (banco_posee(Nom, BP0) ->
         nl, write('Propiedad del BANCO: '), write(Nom), write(' precio='), write(Precio), nl,
         Jug0 = jugador(_,_,Din,_,_),
         (Din >= Precio ->
-            preguntar_si_no('¿Comprar? (si/no).', R),
+            read_yes_no('Comprar? (si/no)', R),
             (R==si ->
                 comprar_propiedad(Nom,Precio,Color, Jug0, BP0, Jug1, BP1, M0, M1),
                 Resto1 = Resto0, Cambio = si
@@ -571,7 +616,7 @@ gestionar_estacion(Nom, Jug0, Resto0, BP0, BP1, Jug1, Resto1, M0, M1, Cambio) :-
         nl, write('Estacion del BANCO: '), write(Nom), write(' precio='), write(Precio), nl,
         Jug0 = jugador(_,_,Din,_,_),
         (Din >= Precio ->
-            preguntar_si_no('¿Comprar? (si/no).', R),
+            read_yes_no('Comprar? (si/no)', R),
             (R==si ->
                 comprar_estacion(Nom,Precio, Jug0, BP0, Jug1, BP1, M0, M1),
                 Resto1=Resto0, Cambio=si
@@ -620,7 +665,7 @@ pagar_a_otro(jugador(N,Pos,Din,Props,Carc),
     DinO2 is DinO + Monto,
     nl, write('Pagas '), write(Monto), write(' a '), write(N2), nl.
 
-% ---------- Bancarrota (con banco comprando al 20%) ----------
+% ---------- Bancarrota ----------
 resolver_bancarrota_jugador_y_banco(Jug0, Resto0, BP0, BPFinal, JugFinal, RestoFinal, M0, MFinal) :-
     ( Jug0 = jugador(N,Pos,Din,Props,Carc),
       Din < 0 ->
@@ -645,13 +690,6 @@ resolver_bancarrota_jugador_y_banco(Jug0, Resto0, BP0, BPFinal, JugFinal, RestoF
     ; JugFinal = Jug0, RestoFinal = Resto0, BPFinal = BP0, MFinal = M0
     ).
 
-resolver_bancarrota_si_aplica(Jug0, Resto0, JugFinal, RestoFinal, BPdummy) :-
-    % helper para trampas (sin tocar BP real ahí)
-    (Jug0 = jugador(_,_,Din,_,_), Din >= 0 ->
-        JugFinal = Jug0, RestoFinal = Resto0, BPdummy = []
-    ; JugFinal = Jug0, RestoFinal = Resto0, BPdummy = []
-    ).
-
 valor_venta_20([], 0).
 valor_venta_20([prop(_,P,_,_)|R], Total) :-
     valor_venta_20(R, T2),
@@ -663,10 +701,10 @@ banco_posee(Nom, [prop(Nom,_,_,_)|_]) :- !.
 banco_posee(Nom, [_|R]) :- banco_posee(Nom, R).
 
 quitar_de_banco(_, [], []).
-quitar_de_banco(Nom, [prop(Nom,P,C,H)|R], R) :- !.
+quitar_de_banco(Nom, [prop(Nom,_,_,_)|R], R) :- !.
 quitar_de_banco(Nom, [X|R], [X|R2]) :- quitar_de_banco(Nom, R, R2).
 
-% ---------- Dueño ----------
+% ---------- Duenio ----------
 encontrar_duenio(Nom, Resto, Duenio, RestoSinDuenio, Idx) :-
     encontrar_duenio_loop(Nom, Resto, 0, Duenio, RestoSinDuenio, Idx).
 
@@ -713,29 +751,6 @@ reemplazar_prop_en_lista([Old|R], Old, New, [New|R]) :- !.
 reemplazar_prop_en_lista([X|R], Old, New, [X|R2]) :- reemplazar_prop_en_lista(R, Old, New, R2).
 
 set_pos_y_carcel(jugador(N,_Pos,Din,Props,_), Pos2, Carc2, jugador(N,Pos2,Din,Props,Carc2)).
-
-% ---------- Ranking ----------
-ranking_jugadores(partida(_,_,Jugadores,_,_,_,_,_,_), Ranking) :-
-    jugadores_a_items(Jugadores, Items),
-    sort_items_desc(Items, Ranking).
-
-jugadores_a_items([], []).
-jugadores_a_items([jugador(N,_,Din,_,_)|R], [item(N,Din)|R2]) :- jugadores_a_items(R, R2).
-
-sort_items_desc(L, Sorted) :- bubble_desc(L, Sorted).
-
-bubble_desc(L, Sorted) :-
-    bubble_pass(L, L2, Swapped),
-    (Swapped == no -> Sorted = L2 ; bubble_desc(L2, Sorted)).
-
-bubble_pass([X], [X], no).
-bubble_pass([item(N1,D1), item(N2,D2)|R], [item(N1,D1)|R2], Swapped) :-
-    D1 >= D2, !,
-    bubble_pass([item(N2,D2)|R], R2, Sw2),
-    Swapped = Sw2.
-bubble_pass([item(N1,D1), item(N2,D2)|R], [item(N2,D2)|R2], si) :-
-    D1 < D2,
-    bubble_pass([item(N1,D1)|R], R2, _).
 
 % ---------- Escenarios ----------
 escenario(1, Partida) :-
@@ -789,113 +804,25 @@ escenario(5, Partida) :-
     P0 = partida(BP,Caja,Js,Idx,_,_,D,A,M),
     Partida = partida(BP,Caja,Js,Idx,0,10,D,A,M).
 
-% ---------- Simulación automática (10 turnos) ----------
-simular_10_turnos(Partida0, PartidaFinal) :- simular_turnos(10, Partida0, PartidaFinal).
-simular_turnos(0, P, P) :- !.
-simular_turnos(N, P0, PF) :-
-    N > 0,
-    turno_auto(P0, P1),
-    N2 is N-1,
-    simular_turnos(N2, P1, PF).
+% ---------- Ranking ----------
+ranking_jugadores(partida(_,_,Jugadores,_,_,_,_,_,_), Ranking) :-
+    jugadores_a_items(Jugadores, Items),
+    sort_items_desc(Items, Ranking).
 
-% Auto: no trampas, compra si puede, casino no juega, casas no compra, carcel tira siempre.
-turno_auto(Partida0, PartidaFinal) :-
-    Partida0 = partida(BP0, Caja0, Jugadores0, Idx0, TurnoNum0, MaxT, Dados0, Azar0, M0),
-    inc_turnos(M0, M1),
-    TurnoNum1 is TurnoNum0 + 1,
-    seleccionar_por_indice(Jugadores0, Idx0, Jug0, Resto0),
-    gestionar_carcel_auto(Jug0, Dados0, Dados1, Estado),
-    ( Estado = fin_turno_con(JUpd) ->
-        reconstruir_jugadores(JUpd, Resto0, Js1),
-        P1 = partida(BP0,Caja0,Js1,Idx0,TurnoNum1,MaxT,Dados1,Azar0,M1),
-        avanzar_turno(P1, PartidaFinal)
-    ; mover_jugador(Jug0, Dados1, Dados2, JugMov, Caja0, Caja1, M1, M2),
-      JugMov = jugador(_,PosNueva,_,_,_),
-      tablero(T),
-      nth1_list(PosNueva, T, Casilla),
-      aplicar_reglas_casilla_auto(Casilla, JugMov, Resto0, BP0, BP1, Caja1, Caja2, Dados2, Dados3, JugFin, RestoFin, M2, M3, Iter),
-      add_iter(M3, Iter, M4),
-      (JugFin == eliminado ->
-          Js1 = RestoFin,
-          P1 = partida(BP1,Caja2,Js1,Idx0,TurnoNum1,MaxT,Dados3,Azar0,M4),
-          normalizar_y_avanzar(P1, PartidaFinal)
-      ; reconstruir_jugadores(JugFin, RestoFin, Js1),
-        P1 = partida(BP1,Caja2,Js1,Idx0,TurnoNum1,MaxT,Dados3,Azar0,M4),
-        avanzar_turno(P1, PartidaFinal)
-      )
-    ).
+jugadores_a_items([], []).
+jugadores_a_items([jugador(N,_,Din,_,_)|R], [item(N,Din)|R2]) :- jugadores_a_items(R, R2).
 
-gestionar_carcel_auto(jugador(N,Pos,Din,Props,Carc), Dados0, DadosFinal, EstadoOut) :-
-    (Carc =:= 0 ->
-        DadosFinal = Dados0,
-        EstadoOut = continuar
-    ; dados_por_defecto(Def),
-      next_from_cycle(Dados0, Def, D1, Dtmp),
-      next_from_cycle(Dtmp, Def, D2, DadosFinal),
-      (D1 =:= D2 ->
-          EstadoOut = fin_turno_con(jugador(N,Pos,Din,Props,0))
-      ; Carc2 is Carc - 1,
-        (Carc2 =< 0 -> EstadoOut = fin_turno_con(jugador(N,Pos,Din,Props,0))
-        ;              EstadoOut = fin_turno_con(jugador(N,Pos,Din,Props,Carc2))
-        )
-      )
-    ).
+sort_items_desc(L, Sorted) :- bubble_desc(L, Sorted).
 
-aplicar_reglas_casilla_auto(Casilla, Jug0, Resto0, BP0, BPFinal, Caja0, CajaFinal, Dados0, DadosFinal, JugFinal, RestoFinal, M0, MFinal, Iter) :-
-    % Auto: compra si puede, casino no juega.
-    aplicar_reglas_loop_auto(Casilla, Jug0, Resto0, BP0, BPFinal, Caja0, CajaFinal, Dados0, DadosFinal, JugFinal, RestoFinal, M0, MFinal, 0, Iter).
+bubble_desc(L, Sorted) :-
+    bubble_pass(L, L2, Swapped),
+    (Swapped == no -> Sorted = L2 ; bubble_desc(L2, Sorted)).
 
-aplicar_reglas_loop_auto(Casilla, Jug0, Resto0, BP0, BP2, Caja0, Caja2, Dados0, Dados2, Jug2, Resto2, M0, M2, Acc, Iter) :-
-    aplicar_una_vez_auto(Casilla, Jug0, Resto0, BP0, BP1, Caja0, Caja1, Dados0, Dados1, Jug1, Resto1, M0, M1, Cambio),
-    Acc1 is Acc + 1,
-    (Cambio == si, Jug1 \== eliminado, Acc1 < 10 ->
-        aplicar_reglas_loop_auto(Casilla, Jug1, Resto1, BP1, BP2, Caja1, Caja2, Dados1, Dados2, Jug2, Resto2, M1, M2, Acc1, Iter)
-    ; BP2=BP1, Caja2=Caja1, Dados2=Dados1, Jug2=Jug1, Resto2=Resto1, M2=M1, Iter=Acc1).
-
-aplicar_una_vez_auto(Casilla, Jug0, Resto0, BP0, BP1, Caja0, Caja1, Dados0, Dados1, JugOut, RestoOut, M0, MOut, Cambio) :-
-    ( Casilla = salida ->
-        BP1=BP0, Caja1=Caja0, Dados1=Dados0, Jug1=Jug0, Resto1=Resto0, M1=M0, Cambio0=no
-    ; Casilla = visita_carcel ->
-        BP1=BP0, Caja1=Caja0, Dados1=Dados0, Jug1=Jug0, Resto1=Resto0, M1=M0, Cambio0=no
-    ; Casilla = carcel ->
-        set_pos_y_carcel(Jug0, 11, 3, JugTmp),
-        BP1=BP0, Caja1=Caja0, Dados1=Dados0, Jug1=JugTmp, Resto1=Resto0, M1=M0, Cambio0=si
-    ; Casilla = parking ->
-        cobrar_parking(Jug0, Caja0, JugTmp, CajaTmp),
-        BP1=BP0, Caja1=CajaTmp, Dados1=Dados0, Jug1=JugTmp, Resto1=Resto0, M1=M0, Cambio0=si
-    ; Casilla = impuesto(_) ->
-        pagar_impuesto(Jug0, Caja0, JugTmp, CajaTmp, M0, M1),
-        BP1=BP0, Caja1=CajaTmp, Dados1=Dados0, Jug1=JugTmp, Resto1=Resto0, Cambio0=si
-    ; Casilla = suerte(_) ->
-        jugar_suerte(Jug0, Caja0, CajaTmp, Dados0, DadosTmp, JugTmp, M0, M1),
-        BP1=BP0, Caja1=CajaTmp, Dados1=DadosTmp, Jug1=JugTmp, Resto1=Resto0, Cambio0=si
-    ; Casilla = casino ->
-        % auto: no juega
-        BP1=BP0, Caja1=Caja0, Dados1=Dados0, Jug1=Jug0, Resto1=Resto0, M1=M0, Cambio0=no
-    ; Casilla = estacion(Nom) ->
-        estacion_precio(Precio),
-        (banco_posee(Nom, BP0), Jug0 = jugador(_,_,Din,_,_), Din >= Precio ->
-            comprar_estacion(Nom,Precio, Jug0, BP0, Jug1, BP1, M0, M1),
-            Resto1=Resto0, Cambio0=si
-        ; encontrar_duenio(Nom, Resto0, Duenio, RestoSin, Idx),
-          estacion_alquiler(Alq),
-          pagar_a_otro(Jug0, Duenio, Alq, JugTmp, DuenioTmp),
-          reinsertar_duenio(RestoSin, Idx, DuenioTmp, Resto1),
-          Jug1=JugTmp, BP1=BP0, M1=M0, Cambio0=si
-        ),
-        Caja1=Caja0, Dados1=Dados0
-    ; Casilla = propiedad(Nom,Precio,Color) ->
-        (banco_posee(Nom, BP0), Jug0 = jugador(_,_,Din,_,_), Din >= Precio ->
-            comprar_propiedad(Nom,Precio,Color, Jug0, BP0, Jug1, BP1, M0, M1),
-            Resto1=Resto0, Cambio0=si
-        ; encontrar_duenio(Nom, Resto0, Duenio, RestoSin, Idx),
-          calcular_alquiler_prop(Precio, Duenio, Nom, Color, Alq),
-          pagar_a_otro(Jug0, Duenio, Alq, JugTmp, DuenioTmp),
-          reinsertar_duenio(RestoSin, Idx, DuenioTmp, Resto1),
-          Jug1=JugTmp, BP1=BP0, M1=M0, Cambio0=si
-        ),
-        Caja1=Caja0, Dados1=Dados0
-    ),
-    resolver_bancarrota_jugador_y_banco(Jug1, Resto1, BP1, BPX, JugX, RestoX, M1, M2),
-    JugOut=JugX, RestoOut=RestoX, BP1=BPX, MOut=M2,
-    (Cambio0 == si ; JugX == eliminado -> Cambio = si ; Cambio = no).
+bubble_pass([X], [X], no).
+bubble_pass([item(N1,D1), item(N2,D2)|R], [item(N1,D1)|R2], Swapped) :-
+    D1 >= D2, !,
+    bubble_pass([item(N2,D2)|R], R2, Sw2),
+    Swapped = Sw2.
+bubble_pass([item(N1,D1), item(N2,D2)|R], [item(N2,D2)|R2], si) :-
+    D1 < D2,
+    bubble_pass([item(N1,D1)|R], R2, _).
