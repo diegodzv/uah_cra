@@ -3,7 +3,7 @@
 % Entrada + bucle de juego
 % =========================
 
-:- consult('regla1.pl').
+:- consult('reglas.pl').
 :- consult('metricas.pl').
 
 start :-
