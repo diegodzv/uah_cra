@@ -620,7 +620,10 @@ gestionar_propiedad(Nom,Precio,Color, Jug0, Resto0, BP0, BP1, Jug1, Resto1, M0, 
         nl, write('Propiedad del BANCO: '), write(Nom), write(' precio='), write(Precio), nl,
         Jug0 = jugador(_,_,Din,_,_),
         (Din >= Precio ->
-            read_yes_no('Comprar? (si/no)', R),
+            nl,
+            write('Comprar? Dinero actual: '), write(Din), write(' (si/no)'),
+            nl,
+            read_yes_no('', R),
             (R==si ->
                 comprar_propiedad(Nom,Precio,Color, Jug0, BP0, Jug1, BP1, M0, M1),
                 Resto1 = Resto0, Cambio = si
@@ -641,7 +644,10 @@ gestionar_estacion(Nom, Jug0, Resto0, BP0, BP1, Jug1, Resto1, M0, M1, Cambio) :-
         nl, write('Estacion del BANCO: '), write(Nom), write(' precio='), write(Precio), nl,
         Jug0 = jugador(_,_,Din,_,_),
         (Din >= Precio ->
-            read_yes_no('Comprar? (si/no)', R),
+            nl,
+            write('Comprar? Dinero actual: '), write(Din), write(' (si/no)'),
+            nl,
+            read_yes_no('', R),
             (R==si ->
                 comprar_estacion(Nom,Precio, Jug0, BP0, Jug1, BP1, M0, M1),
                 Resto1=Resto0, Cambio=si
