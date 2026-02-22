@@ -22,10 +22,6 @@ estacion_alquiler(50).
 
 % ============================================================
 % Entrada robusta (acepta con/sin punto final)
-% - Permite: 3 / 3. / "  3.  "
-% - Permite: si / si. / no / no.
-% - Nombres: Diego / Diego. / diego / diego.
-%   (se normaliza a minusculas para evitar variables)
 % ============================================================
 
 read_line_trimmed(StringOut) :-
@@ -33,7 +29,6 @@ read_line_trimmed(StringOut) :-
     normalize_space(string(S1), S0),
     StringOut = S1.
 
-% Quita un punto final si existe (p.ej. "3." -> "3")
 strip_trailing_dot(S, Out) :-
     string_length(S, Len),
     ( Len > 0,
@@ -74,7 +69,6 @@ read_int_min(Prompt, Min, Int) :-
          fail
       ).
 
-% Reescrito para evitar el warning de singleton variables
 read_yes_no(Prompt, Answer) :-
     repeat,
       nl, write(Prompt), nl,
@@ -230,7 +224,14 @@ partida_terminada(partida(_,_,_Jugadores,_,TurnoNum,MaxT,_,_,_), motivo(max_turn
 partida_terminada(partida(_,_,Jugadores,_,_,_,_,_,_), motivo(un_solo_jugador)) :-
     length_list(Jugadores, L), L =:= 1, !.
 
-% ---------- Turno interactivo ----------
+% ============================================================
+% Turnos: FIX orden jugadores
+% - En vez de poner el jugador actualizado al principio,
+%   lo reinsertamos en la MISMA posicion Idx0.
+% - Si el jugador es eliminado, NO avanzamos el indice:
+%   el "siguiente" pasa a ocupar ese Idx0.
+% ============================================================
+
 turno_interactivo(Partida0, PartidaFinal) :-
     Partida0 = partida(BP0, Caja0, Jugadores0, Idx0, TurnoNum0, MaxT, Dados0, Azar0, M0),
     inc_turnos(M0, M1),
@@ -253,12 +254,13 @@ turno_interactivo(Partida0, PartidaFinal) :-
     resolver_bancarrota_jugador_y_banco(JugB0, Resto1, BP0, BP_after_trampas, JugB, Resto2, M2, M3),
 
     ( JugB == eliminado ->
+        % eliminado antes de mover: no avanzamos turno, el siguiente ocupa Idx0
         Jugadores1 = Resto2,
         Partida1 = partida(BP_after_trampas, Caja0, Jugadores1, Idx0, TurnoNum1, MaxT, Dados0, Azar1, M3),
-        normalizar_y_avanzar(Partida1, PartidaFinal)
+        normalizar_sin_avanzar(Partida1, PartidaFinal)
     ;   gestionar_carcel(JugB, Dados0, Dados1, EstadoCarcel, M3, M4),
         ( EstadoCarcel = fin_turno_con(JugCarcActual) ->
-            reconstruir_jugadores(JugCarcActual, Resto2, Jugadores1),
+            insertar_en_indice(Resto2, Idx0, JugCarcActual, Jugadores1),
             Partida1 = partida(BP_after_trampas, Caja0, Jugadores1, Idx0, TurnoNum1, MaxT, Dados1, Azar1, M4),
             avanzar_turno(Partida1, PartidaFinal)
         ;   mover_jugador(JugB, Dados1, Dados2, JugMov, Caja0, Caja1, M4, M5),
@@ -273,21 +275,19 @@ turno_interactivo(Partida0, PartidaFinal) :-
             ( JugFin == eliminado ->
                 Jugadores1 = RestoFin,
                 Partida1 = partida(BP1, Caja2, Jugadores1, Idx0, TurnoNum1, MaxT, Dados3, Azar1, M7),
-                normalizar_y_avanzar(Partida1, PartidaFinal)
-            ;   reconstruir_jugadores(JugFin, RestoFin, Jugadores1),
+                normalizar_sin_avanzar(Partida1, PartidaFinal)
+            ;   insertar_en_indice(RestoFin, Idx0, JugFin, Jugadores1),
                 Partida1 = partida(BP1, Caja2, Jugadores1, Idx0, TurnoNum1, MaxT, Dados3, Azar1, M7),
                 avanzar_turno(Partida1, PartidaFinal)
             )
         )
     ).
 
-normalizar_y_avanzar(partida(BP,Caja,Jugadores,Idx,Tn,MaxT,D,A,M), Out) :-
+normalizar_sin_avanzar(partida(BP,Caja,Jugadores,Idx,Tn,MaxT,D,A,M),
+                       partida(BP,Caja,Jugadores,Idx2,Tn,MaxT,D,A,M)) :-
     length_list(Jugadores, L),
-    (L =:= 0 ->
-        Out = partida(BP,Caja,Jugadores,0,Tn,MaxT,D,A,M)
-    ;   Idx2 is Idx mod L,
-        P1 = partida(BP,Caja,Jugadores,Idx2,Tn,MaxT,D,A,M),
-        avanzar_turno(P1, Out)
+    ( L =:= 0 -> Idx2 = 0
+    ; Idx2 is Idx mod L
     ).
 
 avanzar_turno(partida(BP,Caja,Jugadores,Idx,Tn,MaxT,D,A,M),
@@ -364,7 +364,7 @@ gestionar_carcel(jugador(N,Pos,Din,Props,Carc), Dados0, DadosFinal, EstadoOut, M
         )
     ).
 
-% ---------- Trampas ----------
+% ---------- Trampas (AJUSTADO) ----------
 aplicar_trampas_interactivo(Jug0, Resto0, Azar0, Azar1, JugFinal, RestoFinal, M0, M2) :-
     read_yes_no('Quieres intentar hacer trampas? (si/no)', R),
     (R == no ->
@@ -379,10 +379,15 @@ aplicar_trampas_interactivo(Jug0, Resto0, Azar0, Azar1, JugFinal, RestoFinal, M0
             RestoFinal = Resto0,
             M2 = M1
         ;   length_list(Resto0, Otros),
-            Multa is 200 * Otros,
+            % NUEVA REGLA:
+            % - si hay 1 jugador mas => paga 200 a ese
+            % - si hay 2 o mas => paga 100 a cada uno
+            ( Otros =:= 1 -> PagoCadaUno = 200 ; PagoCadaUno = 100 ),
+            Multa is PagoCadaUno * Otros,
             restar_dinero(Jug0, Multa, JugTmp),
-            sumar_200_a_todos(Resto0, RestoTmp),
-            nl, write('Te pillan: pagas 200 a cada jugador. Total -'), write(Multa), nl,
+            sumar_a_todos(Resto0, PagoCadaUno, RestoTmp),
+            nl, write('Te pillan: pagas '), write(PagoCadaUno),
+            write(' a cada jugador. Total -'), write(Multa), nl,
             JugFinal = JugTmp,
             RestoFinal = RestoTmp,
             M2 = M1
@@ -393,10 +398,10 @@ tirar_azar(Azar0, Azar1, V) :-
     azar_por_defecto(Def),
     next_from_cycle(Azar0, Def, V, Azar1).
 
-sumar_200_a_todos([], []).
-sumar_200_a_todos([jugador(N,Pos,Din,Props,Carc)|R], [jugador(N,Pos,Din2,Props,Carc)|R2]) :-
-    Din2 is Din + 200,
-    sumar_200_a_todos(R, R2).
+sumar_a_todos([], _X, []).
+sumar_a_todos([jugador(N,Pos,Din,Props,Carc)|R], X, [jugador(N,Pos,Din2,Props,Carc)|R2]) :-
+    Din2 is Din + X,
+    sumar_a_todos(R, X, R2).
 
 sumar_dinero(jugador(N,Pos,Din,Props,Carc), X, jugador(N,Pos,Din2,Props,Carc)) :- Din2 is Din + X.
 restar_dinero(jugador(N,Pos,Din,Props,Carc), X, jugador(N,Pos,Din2,Props,Carc)) :- Din2 is Din - X.
@@ -763,8 +768,6 @@ seleccionar_por_indice([X|R], I, Elem, [X|R2]) :-
 insertar_en_indice(L, 0, X, [X|L]) :- !.
 insertar_en_indice([H|T], I, X, [H|R]) :-
     I > 0, I2 is I-1, insertar_en_indice(T, I2, X, R).
-
-reconstruir_jugadores(J, Resto, [J|Resto]).
 
 reemplazar_prop_en_lista([], _, _, []).
 reemplazar_prop_en_lista([Old|R], Old, New, [New|R]) :- !.
