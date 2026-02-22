@@ -178,7 +178,7 @@ crear_partida_interactiva(N, MaxT, Partida) :-
 crear_jugadores_interactivos(I, N, []) :- I > N, !.
 crear_jugadores_interactivos(I, N, [J|R]) :-
     atom_concat('Nombre del jugador ', I, P1),
-    atom_concat(P1, ' (puedes escribir Diego o Diego.): ', Prompt),
+    atom_concat(P1, ' (puedes escribir "nombre" o "Nombre".): ', Prompt),
     read_atom_prompt(Prompt, Nombre),
     dinero_inicial(D0),
     J = jugador(Nombre, 1, D0, [], 0),
