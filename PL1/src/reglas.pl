@@ -1,5 +1,5 @@
 % =========================
-% regla1.pl
+% reglas.pl
 % Motor del Monopoly + reglas
 % =========================
 
@@ -20,20 +20,43 @@ suerte_delta(75).
 estacion_precio(200).
 estacion_alquiler(50).
 
-% ---------- Entrada robusta (sin punto, sin variables) ----------
-% Lee una linea y devuelve un atom en minusculas o respetando mayus si viene entre comillas.
+% ============================================================
+% Entrada robusta (acepta con/sin punto final)
+% - Permite: 3 / 3. / "  3.  "
+% - Permite: si / si. / no / no.
+% - Nombres: Diego / Diego. / diego / diego.
+%   (se normaliza a minusculas para evitar variables)
+% ============================================================
+
 read_line_trimmed(StringOut) :-
     read_line_to_string(user_input, S0),
     normalize_space(string(S1), S0),
     StringOut = S1.
 
+% Quita un punto final si existe (p.ej. "3." -> "3")
+strip_trailing_dot(S, Out) :-
+    string_length(S, Len),
+    ( Len > 0,
+      LastIndex is Len - 1,
+      sub_string(S, LastIndex, 1, 0, ".")
+    -> sub_string(S, 0, LastIndex, 1, Out0),
+       normalize_space(string(Out), Out0)
+    ;  Out = S
+    ).
+
+sanitize_input(S0, S) :-
+    normalize_space(string(S1), S0),
+    strip_trailing_dot(S1, S2),
+    normalize_space(string(S), S2).
+
 read_atom_prompt(Prompt, Atom) :-
     repeat,
       nl, write(Prompt), nl,
-      read_line_trimmed(S),
-      ( S == "" ->
+      read_line_trimmed(S0),
+      sanitize_input(S0, S1),
+      ( S1 == "" ->
           write('Entrada vacia. Intenta de nuevo.'), nl, fail
-      ; string_lower(S, SLow),
+      ; string_lower(S1, SLow),
         atom_string(Atom, SLow),
         !
       ).
@@ -41,8 +64,9 @@ read_atom_prompt(Prompt, Atom) :-
 read_int_min(Prompt, Min, Int) :-
     repeat,
       nl, write(Prompt), nl,
-      read_line_trimmed(S),
-      ( catch(number_string(N, S), _, fail),
+      read_line_trimmed(S0),
+      sanitize_input(S0, S1),
+      ( catch(number_string(N, S1), _, fail),
         integer(N),
         N >= Min
       -> Int = N, !
@@ -50,24 +74,26 @@ read_int_min(Prompt, Min, Int) :-
          fail
       ).
 
+% Reescrito para evitar el warning de singleton variables
 read_yes_no(Prompt, Answer) :-
     repeat,
       nl, write(Prompt), nl,
-      read_line_trimmed(S),
-      string_lower(S, L),
-      ( L = "si" ; L = "s" ),
-      Answer = si, !
-    ;
-      ( L = "no" ; L = "n" ),
-      Answer = no, !
-    ;
-      write('Responde si/no.'), nl, fail.
+      read_line_trimmed(S0),
+      sanitize_input(S0, S1),
+      string_lower(S1, L),
+      ( (L = "si" ; L = "s") ->
+          Answer = si, !
+      ; (L = "no" ; L = "n") ->
+          Answer = no, !
+      ; write('Responde si/no.'), nl, fail
+      ).
 
 read_choice_int(Prompt, Allowed, Choice) :-
     repeat,
       nl, write(Prompt), nl,
-      read_line_trimmed(S),
-      ( catch(number_string(N, S), _, fail),
+      read_line_trimmed(S0),
+      sanitize_input(S0, S1),
+      ( catch(number_string(N, S1), _, fail),
         integer(N),
         member_int(N, Allowed)
       -> Choice = N, !
@@ -158,7 +184,7 @@ crear_partida_interactiva(N, MaxT, Partida) :-
 crear_jugadores_interactivos(I, N, []) :- I > N, !.
 crear_jugadores_interactivos(I, N, [J|R]) :-
     atom_concat('Nombre del jugador ', I, P1),
-    atom_concat(P1, ' (puedes escribir Diego/sara sin punto): ', Prompt),
+    atom_concat(P1, ' (puedes escribir Diego o Diego.): ', Prompt),
     read_atom_prompt(Prompt, Nombre),
     dinero_inicial(D0),
     J = jugador(Nombre, 1, D0, [], 0),
@@ -186,7 +212,6 @@ imprimir_jugadores([jugador(N,Pos,D,Props,Carc)|R]) :-
     nl,
     imprimir_jugadores(R).
 
-% FIX: si la lista no es vacia, no imprimir "(ninguna)" al final
 imprimir_props([]) :-
     write('   (ninguna)'), nl.
 imprimir_props([H|T]) :-
@@ -221,27 +246,22 @@ turno_interactivo(Partida0, PartidaFinal) :-
     read_yes_no('Quieres consultar la informacion completa de la partida? (si/no)', Ver),
     (Ver == si -> mostrar_estado(Partida0) ; true),
 
-    % Casas por monopolio
     ofrecer_compra_casas(Jug0, Jugadores0, JugA),
 
-    % Trampas
     aplicar_trampas_interactivo(JugA, Resto0, Azar0, Azar1, JugB0, Resto1, M1, M2),
 
-    % Resolver bancarrota inmediatamente tras trampas (con banco real)
     resolver_bancarrota_jugador_y_banco(JugB0, Resto1, BP0, BP_after_trampas, JugB, Resto2, M2, M3),
 
     ( JugB == eliminado ->
         Jugadores1 = Resto2,
         Partida1 = partida(BP_after_trampas, Caja0, Jugadores1, Idx0, TurnoNum1, MaxT, Dados0, Azar1, M3),
         normalizar_y_avanzar(Partida1, PartidaFinal)
-    ;   % Carcel
-        gestionar_carcel(JugB, Dados0, Dados1, EstadoCarcel, M3, M4),
+    ;   gestionar_carcel(JugB, Dados0, Dados1, EstadoCarcel, M3, M4),
         ( EstadoCarcel = fin_turno_con(JugCarcActual) ->
             reconstruir_jugadores(JugCarcActual, Resto2, Jugadores1),
             Partida1 = partida(BP_after_trampas, Caja0, Jugadores1, Idx0, TurnoNum1, MaxT, Dados1, Azar1, M4),
             avanzar_turno(Partida1, PartidaFinal)
-        ;   % Movimiento
-            mover_jugador(JugB, Dados1, Dados2, JugMov, Caja0, Caja1, M4, M5),
+        ;   mover_jugador(JugB, Dados1, Dados2, JugMov, Caja0, Caja1, M4, M5),
             JugMov = jugador(_, PosNueva, _, _, _),
             tablero(T),
             nth1_list(PosNueva, T, Casilla),
