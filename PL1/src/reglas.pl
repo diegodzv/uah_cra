@@ -6,7 +6,7 @@
 :- consult('metricas.pl').
 
 % ---------- Config juego ----------
-dinero_inicial(300).
+dinero_inicial(800).
 cobro_salida(200).
 
 alquiler_propiedad_divisor(4).      % alquiler = Precio // 4
