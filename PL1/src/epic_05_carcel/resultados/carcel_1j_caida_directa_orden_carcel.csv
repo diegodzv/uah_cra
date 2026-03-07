@@ -1,0 +1,2 @@
+turno,jugador,estado_carcel_antes,decision_carcel,evento_carcel_inicio,evento_carcel_fin,turno_perdido_carcel
+1,ana,libre,no_aplica,no_aplica,evento_carcel(entrada,carcel,visita_carcel),no

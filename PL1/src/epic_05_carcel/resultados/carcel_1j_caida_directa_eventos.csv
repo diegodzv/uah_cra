@@ -1,0 +1,2 @@
+turno,indice_jugador,jugador,estado_carcel_antes,decision_carcel,dado1,dado2,suma,posicion_anterior,posicion_nueva,paso_salida,nombre_casilla,tipo_casilla,precio_casilla,color_casilla,compra_realizada,alquiler_realizado,alquiler_teorico,pago_real,dinero_inicial_turno,dinero_tras_carcel,dinero_final_turno,propiedades_antes,propiedades_despues,turno_perdido_carcel
+1,1,ana,libre,no_aplica,4,3,7,24,11,no,visita_carcel,visita_carcel,0,ninguno,no,no,0,0,10000,10000,10000,0,0,no

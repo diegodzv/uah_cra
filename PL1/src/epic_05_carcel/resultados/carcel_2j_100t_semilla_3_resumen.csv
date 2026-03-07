@@ -1,0 +1,12 @@
+metrica,valor
+total_turnos,100
+total_jugadores,2
+total_compras,25
+total_alquileres,23
+importe_total_alquileres,928
+entradas_carcel,4
+salidas_pagando,1
+salidas_dobles,2
+liberaciones_automaticas,1
+turnos_perdidos_carcel,8
+activos_restantes_banco,1
