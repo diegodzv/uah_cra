@@ -1,0 +1,6 @@
+turno,pagador,cobrador,propiedad,tipo,color,precio_casilla,alquiler_teorico,pago_real,dinero_pagador_antes,dinero_pagador_despues,dinero_cobrador_antes,dinero_cobrador_despues
+14,bob,ana,morado1,propiedad,morado,60,12,12,8680,8668,9390,9402
+25,ana,bob,rosa1,propiedad,rosa,140,28,28,9242,9214,8528,8556
+30,bob,ana,estacion2,estacion,estacion,200,40,40,8456,8416,8994,9034
+38,bob,ana,morado2,propiedad,morado,60,12,12,7876,7864,8754,8766
+48,bob,ana,morado2,propiedad,morado,60,12,12,7684,7672,8446,8458

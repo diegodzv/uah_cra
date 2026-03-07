@@ -1,0 +1,12 @@
+turno,pagador,cobrador,propiedad,tipo,color,precio_casilla,alquiler_teorico,pago_real,dinero_pagador_antes,dinero_pagador_despues,dinero_cobrador_antes,dinero_cobrador_despues
+12,diego,bob,rosa1,propiedad,rosa,140,28,28,9880,9852,9560,9588
+14,bob,ana,estacion3,estacion,estacion,200,40,40,9588,9548,9520,9560
+16,diego,carla,rosa3,propiedad,rosa,160,32,32,9852,9820,9840,9872
+25,ana,carla,estacion1,estacion,estacion,200,40,40,9160,9120,9672,9712
+27,carla,bob,rosa1,propiedad,rosa,140,28,28,9712,9684,9348,9376
+29,ana,bob,rosa1,propiedad,rosa,140,28,28,9120,9092,9376,9404
+33,ana,bob,naranja3,propiedad,naranja,200,40,40,9092,9052,9404,9444
+34,bob,carla,rosa3,propiedad,rosa,160,32,32,9444,9412,9684,9716
+40,diego,ana,amarillo1,propiedad,amarillo,260,52,52,9640,9588,8792,8844
+42,bob,carla,amarillo3,propiedad,amarillo,280,56,56,9192,9136,9196,9252
+46,bob,ana,azul2,propiedad,azul,400,80,80,9136,9056,8844,8924
