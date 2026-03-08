@@ -1,0 +1,2 @@
+turno,jugador,nombre_casilla,tipo_casilla,compra,alquiler,impuesto,bancarrota,eliminado,dinero_inicial,dinero_tras_carcel,dinero_final,props_antes,props_despues
+1,ana,rosa1,propiedad,no,si,no,si,no,10,10,182,1,0

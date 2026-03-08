@@ -1,0 +1,9 @@
+turno,pagador,cobrador,propiedad,tipo,color,precio_casilla,alquiler_teorico,pago_real
+29,ana,bob,amarillo1,propiedad,amarillo,260,52,52
+30,bob,ana,estacion2,estacion,estacion,200,40,40
+33,ana,bob,morado1,propiedad,morado,60,12,12
+36,bob,ana,verde2,propiedad,verde,300,60,60
+47,ana,bob,morado2,propiedad,morado,60,12,12
+53,ana,bob,naranja2,propiedad,naranja,180,36,36
+65,ana,bob,verde1,propiedad,verde,300,60,60
+99,ana,bob,morado1,propiedad,morado,60,12,12

@@ -1,0 +1,14 @@
+turno,jugador,causa,dinero_antes,valor_liquidacion,dinero_despues,propiedades_liquidadas,resultado
+50,bob,impuesto,-156,570,414,6,sobrevive
+70,bob,impuesto,-86,100,14,1,sobrevive
+74,bob,alquiler,-10,0,-10,0,eliminado
+83,carla,alquiler,-50,755,705,8,sobrevive
+90,diego,impuesto,-140,330,190,4,sobrevive
+97,ana,impuesto,-60,670,610,6,sobrevive
+114,diego,alquiler,-18,80,62,1,sobrevive
+120,diego,impuesto,-82,0,-82,0,eliminado
+121,ana,impuesto,-60,260,200,3,sobrevive
+132,carla,impuesto,-99,360,261,5,sobrevive
+147,ana,impuesto,-144,0,-144,0,eliminado
+149,carla,impuesto,-49,80,31,1,sobrevive
+155,carla,impuesto,-119,0,-119,0,eliminado
