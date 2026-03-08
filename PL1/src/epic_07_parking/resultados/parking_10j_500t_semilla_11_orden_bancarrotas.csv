@@ -1,0 +1,5 @@
+turno,jugador,causa,dinero_antes,valor_liquidacion,dinero_despues,propiedades_liquidadas,resultado
+366,fernando,alquiler,-8,100,92,1,sobrevive
+376,fernando,impuesto,-58,0,-58,0,eliminado
+468,javier,alquiler,-19,0,-19,0,eliminado
+473,ana,alquiler,-8,375,367,3,sobrevive

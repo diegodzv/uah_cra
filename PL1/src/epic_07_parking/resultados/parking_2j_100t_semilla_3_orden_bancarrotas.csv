@@ -1,0 +1,5 @@
+turno,jugador,causa,dinero_antes,valor_liquidacion,dinero_despues,propiedades_liquidadas,resultado
+36,bob,alquiler,-16,690,674,6,sobrevive
+51,ana,impuesto,-121,785,664,8,sobrevive
+56,bob,impuesto,-18,320,302,4,sobrevive
+79,ana,impuesto,-145,300,155,4,sobrevive

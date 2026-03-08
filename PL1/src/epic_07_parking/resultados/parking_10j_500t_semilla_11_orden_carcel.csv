@@ -1,0 +1,14 @@
+turno,jugador,estado_carcel_antes,decision_carcel,evento_carcel_inicio,evento_carcel_fin,turno_perdido_carcel
+41,ana,libre,no_aplica,no_aplica,evento_carcel(entrada,carcel,visita_carcel),no
+46,fernando,libre,no_aplica,no_aplica,evento_carcel(entrada,carcel,visita_carcel),no
+47,gema,libre,no_aplica,no_aplica,evento_carcel(entrada,carcel,visita_carcel),no
+50,javier,libre,no_aplica,no_aplica,evento_carcel(entrada,carcel,visita_carcel),no
+98,hugo,libre,no_aplica,no_aplica,evento_carcel(entrada,carcel,visita_carcel),no
+143,carla,libre,no_aplica,no_aplica,evento_carcel(entrada,carcel,visita_carcel),no
+157,gema,libre,no_aplica,no_aplica,evento_carcel(entrada,carcel,visita_carcel),no
+243,carla,libre,no_aplica,no_aplica,evento_carcel(entrada,carcel,visita_carcel),no
+270,javier,libre,no_aplica,no_aplica,evento_carcel(entrada,carcel,visita_carcel),no
+304,diego,libre,no_aplica,no_aplica,evento_carcel(entrada,carcel,visita_carcel),no
+325,elena,libre,no_aplica,no_aplica,evento_carcel(entrada,carcel,visita_carcel),no
+385,hugo,libre,no_aplica,no_aplica,evento_carcel(entrada,carcel,visita_carcel),no
+428,elena,libre,no_aplica,no_aplica,evento_carcel(entrada,carcel,visita_carcel),no

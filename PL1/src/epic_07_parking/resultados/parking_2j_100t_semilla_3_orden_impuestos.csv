@@ -1,0 +1,7 @@
+turno,jugador,casilla,importe,dinero_antes,dinero_despues,caja_antes,caja_despues
+24,bob,impuesto3,100,120,20,0,100
+51,ana,impuesto2,150,29,-121,25,175
+56,bob,impuesto3,100,82,-18,175,275
+67,ana,impuesto4,100,165,65,138,238
+79,ana,impuesto2,150,5,-145,238,388
+87,ana,impuesto4,100,155,55,388,488

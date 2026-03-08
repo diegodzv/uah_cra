@@ -1,0 +1,2 @@
+turno,jugador,nombre_casilla,tipo_casilla,compra,alquiler,impuesto,parking,bancarrota,eliminado,dinero_inicial,dinero_tras_carcel,dinero_final,props_antes,props_despues
+1,ana,parking,parking,no,no,no,si,no,no,500,500,650,0,0
