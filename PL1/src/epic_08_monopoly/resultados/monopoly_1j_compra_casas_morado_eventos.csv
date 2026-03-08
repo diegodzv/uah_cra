@@ -1,0 +1,2 @@
+turno,jugador,monopoly,casas_compradas,coste_casas,nombre_casilla,tipo_casilla,compra,alquiler,impuesto,parking,bancarrota,eliminado,dinero_inicial,dinero_tras_monopoly,dinero_tras_carcel,dinero_final,props_antes,props_despues
+1,ana,si,2,200,suerte1,suerte,no,no,no,no,no,no,500,300,300,300,2,2

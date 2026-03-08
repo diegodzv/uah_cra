@@ -1,0 +1,10 @@
+turno,jugador,colores_monopolio,casas_compradas,coste_total,dinero_antes,dinero_despues
+24,bob,"[azul]",2,200,8080,7880
+26,bob,"[azul]",2,200,7880,7680
+28,bob,"[azul]",2,200,7680,7480
+31,ana,"[verde]",3,300,7840,7540
+33,ana,"[verde]",3,300,7440,7140
+35,ana,"[verde]",3,300,7184,6884
+64,bob,"[azul,gris]",3,300,6788,6488
+66,bob,"[azul,gris]",3,300,6500,6200
+68,bob,"[azul,gris]",3,300,6228,5928
