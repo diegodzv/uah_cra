@@ -1,0 +1,7 @@
+[main].
+
+analizar([el,mercado,compro,acciones], X).
+dibujar([el,mercado,compro,acciones]).
+simplificar([jose,estudia,filosofia,pero,maria,estudia,derecho], X).
+analizar_con_todo([la,inflacion,come,los,ahorros], A, S, E, Adv).
+ejecutar_escenarios.
