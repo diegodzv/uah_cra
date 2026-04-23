@@ -138,38 +138,35 @@ analizar_frase(Id, Arbol) :-
     frase(Id, _Tipo, _Texto, Tokens),
     analizar(Tokens, Arbol).
 
-
 dibujar(Tokens) :-
     analizar(Tokens, Arbol),
     draw(Arbol).
-
 
 dibujar_frase(Id) :-
     analizar_frase(Id, Arbol),
     draw(Arbol).
 
-
 simplificar(Tokens, Simples) :-
     analizar(Tokens, Arbol),
     simplificar_arbol(Arbol, Simples).
-
 
 simplificar_frase(Id, Simples) :-
     analizar_frase(Id, Arbol),
     simplificar_arbol(Arbol, Simples).
 
+probar_frase(Id) :-
+    frase(Id, Tipo, Texto, Tokens),
+    write('['), write(Id), write('] '), write(Tipo), write(' -> '), writeln(Texto),
+    (   analizar(Tokens, Arbol)
+    ->  write('  OK: '), writeln(Arbol)
+    ;   writeln('  ERROR: no analizable con la gramática actual')
+    ),
+    nl.
 
 probar_corpus :-
     forall(
-        frase(Id, Tipo, Texto, Tokens),
-        (
-            write('['), write(Id), write('] '), write(Tipo), write(' -> '), writeln(Texto),
-            (   analizar(Tokens, Arbol)
-            ->  write('  OK: '), writeln(Arbol)
-            ;   writeln('  ERROR: no analizable con la gramática actual')
-            ),
-            nl
-        )
+        frase(Id, _Tipo, _Texto, _Tokens),
+        probar_frase(Id)
     ).
 
 /* =========================================================
@@ -223,7 +220,8 @@ oracion_compuesta(
    GRUPOS SINTACTICOS
    ========================================================= */
 
-grupo_nominal(GN) --> grupo_nominal_base(GN).
+grupo_nominal(GN) -->
+    grupo_nominal_base(GN).
 
 grupo_nominal_base(gn(N)) -->
     nombre(N).
@@ -248,6 +246,11 @@ grupo_nominal_base(gn(N, GP)) -->
 grupo_nominal_base(gn(Det, N, GP)) -->
     determinante(Det),
     nombre(N),
+    grupo_preposicional(GP).
+
+grupo_nominal_base(gn(N, GAdj, GP)) -->
+    nombre(N),
+    grupo_adjetival(GAdj),
     grupo_preposicional(GP).
 
 grupo_nominal_base(gn(Det, N, GAdj, GP)) -->
@@ -332,10 +335,12 @@ det(seis).
 n(transformer).
 n(modelo).
 n(codificador).
+n(codificacion).
 n(decodificador).
+n(conexion).
+n(conexiones).
 n(capa).
 n(capas).
-n(conexion).
 n(recurrencia).
 n(representaciones).
 n(posiciones).
@@ -381,11 +386,11 @@ v(mantiene).
 adj(residual).
 adj(continuas).
 adj(posicionales).
+adj(posicional).
 adj(ponderada).
 adj(feed_forward).
 adj(residuales).
 adj(sinusoidales).
-adj(posicional).
 
 adv(bien).
 
@@ -402,7 +407,10 @@ rel(que).
 
 simplificar_arbol(o(GN, GV), [o(GN, GV)]).
 
-simplificar_arbol(oc(o(GN, GV1), _Conj, o(_GN, GV2)), [o(GN, GV1), o(GN, GV2)]).
+simplificar_arbol(
+    oc(o(GN, GV1), _Conj, o(_GN, GV2)),
+    [o(GN, GV1), o(GN, GV2)]
+).
 
 simplificar_arbol(
     or(o(GNSuj, gv(VMain, gn_rel(GNAnte, or_rel(_Rel, GVRel))))),
