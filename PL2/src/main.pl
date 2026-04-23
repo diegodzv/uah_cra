@@ -1,4 +1,131 @@
+:- encoding(utf8).
 :- consult(draw).
+
+/* =========================================================
+   CORPUS DE LA MINUTA 1
+   dominio: tecnologia
+   fuente: Vaswani et al., "Attention Is All You Need" (2017)
+   ========================================================= */
+
+frase(1, o,
+    'El transformer usa mecanismos de atención.',
+    [el, transformer, usa, mecanismos, de, atencion]).
+
+frase(2, o,
+    'El modelo elimina la recurrencia.',
+    [el, modelo, elimina, la, recurrencia]).
+
+frase(3, o,
+    'El codificador contiene seis capas.',
+    [el, codificador, contiene, seis, capas]).
+
+frase(4, o,
+    'El decodificador contiene seis capas.',
+    [el, decodificador, contiene, seis, capas]).
+
+frase(5, o,
+    'Cada capa usa una conexión residual.',
+    [cada, capa, usa, una, conexion, residual]).
+
+frase(6, o,
+    'El modelo produce representaciones continuas.',
+    [el, modelo, produce, representaciones, continuas]).
+
+frase(7, o,
+    'La autoatención relaciona posiciones de una secuencia.',
+    [la, autoatencion, relaciona, posiciones, de, una, secuencia]).
+
+frase(8, o,
+    'El modelo comparte la matriz de pesos.',
+    [el, modelo, comparte, la, matriz, de, pesos]).
+
+frase(9, o,
+    'Las codificaciones posicionales usan funciones sinusoidales.',
+    [las, codificaciones, posicionales, usan, funciones, sinusoidales]).
+
+frase(10, o,
+    'El transformer mejora la calidad de traducción.',
+    [el, transformer, mejora, la, calidad, de, traduccion]).
+
+frase(11, o,
+    'El modelo permite paralelización.',
+    [el, modelo, permite, paralelizacion]).
+
+frase(12, o,
+    'La atención calcula una suma ponderada.',
+    [la, atencion, calcula, una, suma, ponderada]).
+
+frase(13, o,
+    'La red aplica softmax.',
+    [la, red, aplica, softmax]).
+
+frase(14, o,
+    'El decodificador genera una secuencia de salida.',
+    [el, decodificador, genera, una, secuencia, de, salida]).
+
+frase(15, o,
+    'La codificación posicional representa el orden de la secuencia.',
+    [la, codificacion, posicional, representa, el, orden, de, la, secuencia]).
+
+frase(16, o,
+    'El transformer generaliza bien.',
+    [el, transformer, generaliza, bien]).
+
+frase(17, oc,
+    'El modelo mejora la calidad y permite paralelización.',
+    [el, modelo, mejora, la, calidad, y, permite, paralelizacion]).
+
+frase(18, oc,
+    'El codificador usa autoatención y aplica una red feed-forward.',
+    [el, codificador, usa, autoatencion, y, aplica, una, red, feed_forward]).
+
+frase(19, oc,
+    'El modelo elimina la recurrencia pero mantiene la atención.',
+    [el, modelo, elimina, la, recurrencia, pero, mantiene, la, atencion]).
+
+frase(20, oc,
+    'El decodificador usa autoatención y genera una secuencia de salida.',
+    [el, decodificador, usa, autoatencion, y, genera, una, secuencia, de, salida]).
+
+frase(21, oc,
+    'Las capas producen representaciones continuas y usan conexiones residuales.',
+    [las, capas, producen, representaciones, continuas, y, usan, conexiones, residuales]).
+
+frase(22, oc,
+    'El modelo usa embeddings y comparte la matriz de pesos.',
+    [el, modelo, usa, embeddings, y, comparte, la, matriz, de, pesos]).
+
+frase(23, or,
+    'El transformer es un modelo que usa mecanismos de atención.',
+    [el, transformer, es, un, modelo, que, usa, mecanismos, de, atencion]).
+
+frase(24, or,
+    'La autoatención es un mecanismo que relaciona posiciones de una secuencia.',
+    [la, autoatencion, es, un, mecanismo, que, relaciona, posiciones, de, una, secuencia]).
+
+frase(25, or,
+    'El codificador contiene capas que producen representaciones continuas.',
+    [el, codificador, contiene, capas, que, producen, representaciones, continuas]).
+
+frase(26, or,
+    'El modelo usa codificaciones posicionales que representan el orden de la secuencia.',
+    [el, modelo, usa, codificaciones, posicionales, que, representan, el, orden, de, la, secuencia]).
+
+frase(27, ocm,
+    'El transformer es un modelo que usa mecanismos de atención y mejora la calidad de traducción.',
+    [el, transformer, es, un, modelo, que, usa, mecanismos, de, atencion, y, mejora, la, calidad, de, traduccion]).
+
+frase(28, ocm,
+    'El codificador contiene capas que producen representaciones continuas y usa conexiones residuales.',
+    [el, codificador, contiene, capas, que, producen, representaciones, continuas, y, usa, conexiones, residuales]).
+
+frase(29, ocm,
+    'El decodificador es un módulo que usa autoatención y genera una secuencia de salida.',
+    [el, decodificador, es, un, modulo, que, usa, autoatencion, y, genera, una, secuencia, de, salida]).
+
+frase(30, ocm,
+    'El modelo usa codificaciones posicionales que representan el orden de la secuencia y comparte la matriz de pesos.',
+    [el, modelo, usa, codificaciones, posicionales, que, representan, el, orden, de, la, secuencia, y, comparte, la, matriz, de, pesos]).
 
 /* =========================================================
    PREDICADOS DE USO
@@ -7,106 +134,165 @@
 analizar(Tokens, Arbol) :-
     phrase(oracion(Arbol), Tokens).
 
+analizar_frase(Id, Arbol) :-
+    frase(Id, _Tipo, _Texto, Tokens),
+    analizar(Tokens, Arbol).
+
+
 dibujar(Tokens) :-
     analizar(Tokens, Arbol),
     draw(Arbol).
+
+
+dibujar_frase(Id) :-
+    analizar_frase(Id, Arbol),
+    draw(Arbol).
+
 
 simplificar(Tokens, Simples) :-
     analizar(Tokens, Arbol),
     simplificar_arbol(Arbol, Simples).
 
 
+simplificar_frase(Id, Simples) :-
+    analizar_frase(Id, Arbol),
+    simplificar_arbol(Arbol, Simples).
+
+
+probar_corpus :-
+    forall(
+        frase(Id, Tipo, Texto, Tokens),
+        (
+            write('['), write(Id), write('] '), write(Tipo), write(' -> '), writeln(Texto),
+            (   analizar(Tokens, Arbol)
+            ->  write('  OK: '), writeln(Arbol)
+            ;   writeln('  ERROR: no analizable con la gramática actual')
+            ),
+            nl
+        )
+    ).
+
 /* =========================================================
-   ORACIONES
+   GRAMATICA PRINCIPAL
    ========================================================= */
 
-oracion(Arbol) -->
-    oracion_compuesta(Arbol).
-oracion(Arbol) -->
-    oracion_coordinada(Arbol).
-oracion(Arbol) -->
-    oracion_relativo(Arbol).
-oracion(Arbol) -->
-    oracion_simple(Arbol).
+oracion(Arbol) --> oracion_compuesta(Arbol).
+oracion(Arbol) --> oracion_relativo(Arbol).
+oracion(Arbol) --> oracion_coordinada(Arbol).
+oracion(Arbol) --> oracion_simple(Arbol).
 
 oracion_simple(o(GN, GV)) -->
     grupo_nominal(GN),
-    grupo_verbal(GV).
+    grupo_verbal_simple(GV).
 
-oracion_coordinada(oc(O1, Conj, O2)) -->
-    oracion_simple(O1),
+oracion_coordinada(oc(o(GN, GV1), Conj, o(GN, GV2))) -->
+    grupo_nominal(GN),
+    grupo_verbal_simple(GV1),
     conjuncion(Conj),
-    oracion_simple(O2).
+    grupo_verbal_simple(GV2).
 
-oracion_relativo(or(GN, Rel, GV)) -->
-    grupo_nominal_base(GN),
-    subordinada_relativo(Rel),
-    grupo_verbal(GV).
+oracion_relativo(
+    or(
+        o(GNSuj, gv(VMain, gn_rel(GNAnte, RelClause)))
+    )
+) -->
+    grupo_nominal(GNSuj),
+    verbo(VMain),
+    grupo_nominal_base(GNAnte),
+    subordinada_relativo(RelClause).
 
-subordinada_relativo(rel(Rel, GV)) -->
+subordinada_relativo(or_rel(Rel, GV)) -->
     relativo(Rel),
-    grupo_verbal(GV).
+    grupo_verbal_simple(GV).
 
-oracion_compuesta(ocm(OR, Conj, O2)) -->
-    oracion_relativo(OR),
+oracion_compuesta(
+    ocm(
+        or(o(GNSuj, gv(VMain, gn_rel(GNAnte, RelClause)))),
+        Conj,
+        o(GNSuj, GV2)
+    )
+) -->
+    grupo_nominal(GNSuj),
+    verbo(VMain),
+    grupo_nominal_base(GNAnte),
+    subordinada_relativo(RelClause),
     conjuncion(Conj),
-    oracion_simple(O2).
-
+    grupo_verbal_simple(GV2).
 
 /* =========================================================
-   GRUPOS SINTÁCTICOS
+   GRUPOS SINTACTICOS
    ========================================================= */
 
-grupo_nominal(GN) -->
-    grupo_nominal_base(GN).
-grupo_nominal(gn(GNBase, GP)) -->
-    grupo_nominal_base(GNBase),
-    grupo_preposicional(GP).
+grupo_nominal(GN) --> grupo_nominal_base(GN).
 
 grupo_nominal_base(gn(N)) -->
     nombre(N).
+
 grupo_nominal_base(gn(Det, N)) -->
     determinante(Det),
     nombre(N).
+
 grupo_nominal_base(gn(Det, N, GAdj)) -->
     determinante(Det),
     nombre(N),
     grupo_adjetival(GAdj).
+
 grupo_nominal_base(gn(N, GAdj)) -->
     nombre(N),
     grupo_adjetival(GAdj).
 
-grupo_verbal(gv(V)) -->
+grupo_nominal_base(gn(N, GP)) -->
+    nombre(N),
+    grupo_preposicional(GP).
+
+grupo_nominal_base(gn(Det, N, GP)) -->
+    determinante(Det),
+    nombre(N),
+    grupo_preposicional(GP).
+
+grupo_nominal_base(gn(Det, N, GAdj, GP)) -->
+    determinante(Det),
+    nombre(N),
+    grupo_adjetival(GAdj),
+    grupo_preposicional(GP).
+
+grupo_verbal_simple(gv(V)) -->
     verbo(V).
 
-grupo_verbal(gv(V, GN)) -->
+grupo_verbal_simple(gv(V, GN)) -->
     verbo(V),
-    grupo_nominal(GN).
+    grupo_nominal_base(GN).
 
-grupo_verbal(gv(V, GP)) -->
+grupo_verbal_simple(gv(V, GP)) -->
     verbo(V),
     grupo_preposicional(GP).
 
-grupo_verbal(gv(V, GN, GP)) -->
-    verbo(V),
-    grupo_nominal(GN),
-    grupo_preposicional(GP).
-
-grupo_verbal(gv(V, GAdj)) -->
+grupo_verbal_simple(gv(V, GAdj)) -->
     verbo(V),
     grupo_adjetival(GAdj).
 
-grupo_verbal(gv(V, GAdv)) -->
+grupo_verbal_simple(gv(V, GAdv)) -->
     verbo(V),
     grupo_adverbial(GAdv).
 
-grupo_verbal(gv(V, GAdj, GP)) -->
+grupo_verbal_simple(gv(V, GN, GP)) -->
+    verbo(V),
+    grupo_nominal_base(GN),
+    grupo_preposicional(GP).
+
+grupo_verbal_simple(gv(V, GAdj, GP)) -->
     verbo(V),
     grupo_adjetival(GAdj),
     grupo_preposicional(GP).
 
+grupo_verbal_simple(gv(V, GAdv, GP)) -->
+    verbo(V),
+    grupo_adverbial(GAdv),
+    grupo_preposicional(GP).
+
 grupo_adjetival(gadj(Adj)) -->
     adjetivo(Adj).
+
 grupo_adjetival(gadj(Adv, Adj)) -->
     adverbio(Adv),
     adjetivo(Adj).
@@ -116,8 +302,7 @@ grupo_adverbial(gadv(Adv)) -->
 
 grupo_preposicional(gp(Prep, GN)) -->
     preposicion(Prep),
-    grupo_nominal(GN).
-
+    grupo_nominal_base(GN).
 
 /* =========================================================
    TERMINALES
@@ -132,109 +317,103 @@ conjuncion(conj(X))  --> [X], { conj(X) }.
 preposicion(prep(X)) --> [X], { prep(X) }.
 relativo(rel(X))     --> [X], { rel(X) }.
 
-
 /* =========================================================
-   LÉXICO
+   LEXICO DEL CORPUS
    ========================================================= */
 
 det(el).
 det(la).
-det(los).
 det(las).
 det(un).
 det(una).
 det(cada).
+det(seis).
 
 n(transformer).
 n(modelo).
-n(arquitectura).
-n(atencion).
-n(mecanismo).
-n(mecanismos).
-n(autoatencion).
 n(codificador).
 n(decodificador).
 n(capa).
 n(capas).
 n(conexion).
-n(red).
-n(secuencia).
-n(secuencias).
 n(recurrencia).
-n(convolucion).
-n(representacion).
 n(representaciones).
-n(dimensión).
+n(posiciones).
+n(secuencia).
+n(matriz).
+n(pesos).
+n(codificaciones).
 n(calidad).
 n(traduccion).
+n(paralelizacion).
+n(atencion).
+n(autoatencion).
+n(funciones).
+n(suma).
+n(red).
+n(softmax).
 n(orden).
-n(pesos).
-n(matriz).
-n(codificaciones).
-n(posiciones).
+n(mecanismo).
+n(mecanismos).
+n(modulo).
+n(embeddings).
+n(salida).
 
 v(usa).
 v(usan).
-v(propone).
 v(elimina).
 v(contiene).
-v(contienen).
-v(aplica).
-v(aplican).
 v(produce).
 v(producen).
 v(relaciona).
-v(relacionan).
-v(mejora).
+v(comparte).
 v(mejora).
 v(permite).
-v(permiten).
-v(comparte).
+v(calcula).
+v(aplica).
+v(genera).
 v(representa).
 v(representan).
+v(generaliza).
+v(es).
+v(mantiene).
 
-adj(simple).
-adj(simples).
 adj(residual).
-adj(residuales).
 adj(continuas).
-adj(continua).
 adj(posicionales).
-adj(paralela).
-adj(paralelas).
-adj(global).
-adj(globales).
+adj(ponderada).
+adj(feed_forward).
+adj(residuales).
+adj(sinusoidales).
+adj(posicional).
 
-adv(solo).
-adv(significativamente).
-adv(tambien).
+adv(bien).
 
 conj(y).
 conj(pero).
 
 prep(de).
-prep(con).
-prep(sin).
-prep(en).
-prep(para).
 
 rel(que).
 
-
 /* =========================================================
-   SIMPLIFICACIÓN
+   SIMPLIFICACION
    ========================================================= */
 
 simplificar_arbol(o(GN, GV), [o(GN, GV)]).
 
-simplificar_arbol(oc(O1, _Conj, O2), Simples) :-
-    simplificar_arbol(O1, S1),
-    simplificar_arbol(O2, S2),
-    append(S1, S2, Simples).
+simplificar_arbol(oc(o(GN, GV1), _Conj, o(_GN, GV2)), [o(GN, GV1), o(GN, GV2)]).
 
-simplificar_arbol(or(GN, rel(_Rel, GV1), GV2), [o(GN, GV1), o(GN, GV2)]).
+simplificar_arbol(
+    or(o(GNSuj, gv(VMain, gn_rel(GNAnte, or_rel(_Rel, GVRel))))),
+    [o(GNSuj, gv(VMain, GNAnte)), o(GNAnte, GVRel)]
+).
 
-simplificar_arbol(ocm(O1, _Conj, O2), Simples) :-
-    simplificar_arbol(O1, S1),
-    simplificar_arbol(O2, S2),
-    append(S1, S2, Simples).
+simplificar_arbol(
+    ocm(
+        or(o(GNSuj, gv(VMain, gn_rel(GNAnte, or_rel(_Rel, GVRel))))),
+        _Conj,
+        o(_GNSuj2, GV2)
+    ),
+    [o(GNSuj, gv(VMain, GNAnte)), o(GNAnte, GVRel), o(GNSuj, GV2)]
+).

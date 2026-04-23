@@ -72,16 +72,16 @@ aux_lines(Out,Begin,_,_) :- lines(Out,Begin).
 
 lines([],_).
 lines([H|T],Cur) :- New is H - Cur, wspaces(New),
-                        Next is H + 1,  
-                        write('|'), lines(T,Next). 
+                        Next is H + 1,
+                        write('|'), lines(T,Next).
 
-size(Term,Size) :- name(Term,List),len(List,Size). 
+size(Term,Size) :- name(Term,List),len(List,Size).
 
 len([],0).
 len([_|T],Length) :- len(T,J), Length is J + 1.
 
 dummy(~,Tin,Tout) :- !,
-                       append(Tin,[124],Tout). 
+                       append(Tin,[124],Tout).
 
 dummy(Name,Tin,Tout) :- name(Name,List), append(Tin,List,Tout).
 
@@ -89,7 +89,7 @@ prt([]).
 prt(List) :- name(Text,List),write(Text).
 
 post(0,_) :- !.
-post(1,_) :- !. 
+post(1,_) :- !.
 post(_,Dout) :- prt(Dout).
 
 end([],[],[]):- !. /* empty list sent to end */
@@ -107,7 +107,7 @@ ifs(End,Din,Dout) :- append(Din,[End],Dout).
 single(Din,Dout,Chars) :- end(Din,Dmid,End),
                                           /* if [] add char - 1 spaces
                                              if + append + and char - 1 spaces
-                                             if | append | and char - 1 spaces 
+                                             if | append | and char - 1 spaces
                                              if anything else, I messed up */
                         ifs(End,Dmid,Dmid2),
                         New is Chars - 1,
@@ -117,19 +117,19 @@ single(Din,Dout,Chars) :- end(Din,Dmid,End),
 dashes(0,Dout,Dout) :- !.
 dashes(Num,Din,Dout) :- New is Num - 1,
                         append(Din,[45],Dmid),
-                        dashes(New,Dmid,Dout). 
+                        dashes(New,Dmid,Dout).
 
 cont(32,Chars,Din,Dout) :- !,dashes(Chars,Din,Dout).
                         /* if ' ' append char dashes */
-                                
-                        
+
+
 cont(End,Chars,Din,Dout) :-     New is Chars - 1,
                                 ifs(End,Din,Dmid),
                                 spaces(New,Dmid,Dmid1),
                                 append(Dmid1,[43],Dout).
 
                                 /* if [] add char - 1 spaces and +
-                                if + append + and char - 1 spaces and + 
+                                if + append + and char - 1 spaces and +
                                 if | append | and char - 1 spaces and +
                                 if anything else, I messed up */
 
@@ -143,11 +143,11 @@ choose(End,Din,Dout) :-  ifs(End,Din,Dout).
 
 check(In) :- In>0,!.
 check(In) :- In=<0,write('Error: label overlap detected; suggest increasing base node seperation in loc'),nl, fail.
-                                                
+
 breadth(Max,Max,_) :- !.
 breadth(Level,Max,Struct) :-
                         New is Level + 1,
-                        at(Level,1,Struct,0,_,[],Out,[],Tout,[],Dout), 
+                        at(Level,1,Struct,0,_,[],Out,[],Tout,[],Dout),
                         /* print dashes, nl, text, nl, lines, nl */
                         post(Level,Dout), nl,
                         prt(Tout), nl,
@@ -156,9 +156,9 @@ breadth(Level,Max,Struct) :-
 
 at(1,Arity,Struct,Cur,Pos,In,Out,Tin,Tout,Din,Dout) :- !,
                         functor(Struct,Name,_),
-                        arg(1,Struct,Spaces), 
+                        arg(1,Struct,Spaces),
                         Actual is Spaces - Cur,
-                        check(Actual), 
+                        check(Actual),
                         spaces(Actual,Tin,Tmid),
                         T is Cur + Actual,
                         size(Name,Size), Pos is T + Size,
@@ -171,7 +171,7 @@ at(1,Arity,Struct,Cur,Pos,In,Out,Tin,Tout,Din,Dout) :- !,
                         dummy(Name,Tmid,Tout).
 
 
-at(Level,_,Struct,Cur,Pos,In,Out,Tin,Tout,Din,Dout) :- 
+at(Level,_,Struct,Cur,Pos,In,Out,Tin,Tout,Din,Dout) :-
                                 functor(Struct,_,Arity),
                                 Next_lev is Level - 1,
         for_each(1,Arity,Struct,Next_lev,Cur,Pos,In,Out,Tin,Tout,Din,Dout).
@@ -182,7 +182,7 @@ for_each(Same,Same,_,_,X,X,Y,Y,Z,Z,Din,Dout) :- !, end(Din,Mid,End),
                                         else append End */
 
 for_each(Begin,End,Struct,Level,Cur,New_Pos,In,Out,Tin,Tout,Din,Dout) :-
-                                Count is Begin + 1, 
+                                Count is Begin + 1,
                                 arg(Count,Struct,Sub),
                         at(Level,End,Sub,Cur,Pos,In,Mid,Tin,TMid,Din,Dmid),
       for_each(Count,End,Struct,Level,Pos,New_Pos,Mid,Out,TMid,Tout,Dmid,Dout).
@@ -208,13 +208,13 @@ foreach(Begin,End,Struct,Cur,Max,Level) :- Count is Begin + 1,
    of the tree.  If you are having label overlap problems, increase it and
    they might go away */
 
-loc(Struct,Cur,New,New_struct,Adj) :-   size(Struct,Size), 
+loc(Struct,Cur,New,New_struct,Adj) :-   size(Struct,Size),
                                         New is (Cur + Size) + 5,
                                         functor(Struct,Name,Arity),
                                         NArity is Arity + 1,
                                         functor(New_struct,Name,NArity),
-                                        M is (Size + 1)/2, trunc(M,V), 
-                                        Adj is Cur + (V - 1). 
+                                        M is (Size + 1)/2, trunc(M,V),
+                                        Adj is Cur + (V - 1).
 
 al(0,Struct,New_struct,Cur,New,Adj) :- loc(Struct,Cur,New,New_struct,Adj),
                                         arg(1,New_struct,Cur).
@@ -222,14 +222,13 @@ al(0,Struct,New_struct,Cur,New,Adj) :- loc(Struct,Cur,New,New_struct,Adj),
 /* everytime I get to bottom of branch, and level is not equal to maxdepth,
    add a level */
 
-al(Needed_Depth,Struct,New_struct,Cur,Npos,Adj)  :- New is Needed_Depth - 1, 
+al(Needed_Depth,Struct,New_struct,Cur,Npos,Adj)  :- New is Needed_Depth - 1,
                                         al(New,Struct,Tstruct,Cur,Npos,Adj),
                                         functor(New_struct,'~',2),
                                         arg(2,New_struct,Tstruct),
                                         arg(1,New_struct,Adj).
 
 /* this is the case where we are at the leaf and it is the right depth */
-
 add(1,Struct,New_struct,Cur,New) :- !,
                                         loc(Struct,Cur,New,New_struct,_),
                                         arg(1,New_struct,Cur).
@@ -242,11 +241,11 @@ add(Depth,Struct,New_struct,Cur,New)  :- functor(Struct,_,0),!,
                                 al(Next,Struct,New_struct,Cur,New,_).
 
 add(Depth,Struct,New_struct,Cur,New) :- functor(Struct,_,Arity),
-                                Next is Depth - 1, 
+                                Next is Depth - 1,
                         fore(0,Arity,Struct,Next,New_struct,Cur,New,_,_).
 
 fore(Same,Same,Struct,_,New_struct,Cur,Cur,First,Size) :- !,
-                                                functor(Struct,Name,Arity), 
+                                                functor(Struct,Name,Arity),
                                                 NArity is Arity + 1,
                                                 functor(New_struct,Name,NArity),
 /*the pos of this struct is (first + cur)/2 or first depending on single
@@ -255,7 +254,7 @@ fore(Same,Same,Struct,_,New_struct,Cur,Cur,First,Size) :- !,
                                         case(Same,Cur,Size,First,Pos,Nsize),
                                                  arg(1,New_struct,Pos).
 
-fore(Begin,End,Struct,Cur_depth,New_struct,Cur,New,Ifst,Isize) :- 
+fore(Begin,End,Struct,Cur_depth,New_struct,Cur,New,Ifst,Isize) :-
                                                 Count is Begin + 1,
                                                 arg(Count,Struct,Sub),
                                         add(Cur_depth,Sub,Sub1,Cur,Mid),
@@ -270,10 +269,10 @@ fore(Begin,End,Struct,Cur_depth,New_struct,Cur,New,Ifst,Isize) :-
 first(1,Cur,_,Size,Size,_,Cur) :-!.
 first(_,_,Size,_,Size,Same,Same).
 
-/* single or multiple subargs; if End is 1, then single, else multiple */ 
+/* single or multiple subargs; if End is 1, then single, else multiple */
 
 case(1,_,Size,First,Pos,Nsize) :- !,T is First + ((Size+1)/2),
-                                trunc(T,V), Mid is V - 1, 
+                                trunc(T,V), Mid is V - 1,
                                 T2 is ((Nsize+1)/2) - 1,
                                 trunc(T2,T3),
                                 Pos is Mid - T3.
